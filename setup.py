@@ -669,7 +669,7 @@ def determine_angle_flags():
         "KIVY_ANGLE_LIB_DIR", default_lib_dir
     )
 
-    if platform in "darwin":
+    if platform == "darwin":
         flags['libraries'] = ['EGL', 'GLESv2']
         flags['library_dirs'] = [kivy_angle_lib_dir]
         flags['include_dirs'] = [kivy_angle_include_dir]
