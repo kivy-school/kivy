@@ -159,9 +159,12 @@ platform = sys.platform
 ndkplatform = environ.get('NDKPLATFORM')
 if ndkplatform is not None and environ.get('LIBLINK'):
     platform = 'android'
-kivy_ios_root = environ.get('KIVYIOSROOT', None)
-if kivy_ios_root is not None:
-    platform = 'ios'
+
+# should not be needed anymore, as cibuildwheel will set sys.platform to 'ios'
+# kivy_ios_root = environ.get('KIVYIOSROOT', None)
+# if kivy_ios_root is not None:
+#     platform = 'ios'
+
 # proprietary broadcom video core drivers
 if exists('/opt/vc/include/bcm_host.h'):
     used_pi_version = pi_version
@@ -246,10 +249,11 @@ use_embed_signature = use_embed_signature or bool(
 # This determines whether Cython specific functionality may be used.
 can_use_cython = True
 
-if platform in ('ios', 'android'):
-    # NEVER use or declare cython on these platforms
-    print('Not using cython on %s' % platform)
-    can_use_cython = False
+# cythonize on mobile platforms by cibuildwheel works now, so allow it.
+# if platform in ('ios', 'android'):
+#     # NEVER use or declare cython on these platforms
+#     print('Not using cython on %s' % platform)
+#     can_use_cython = False
 
 
 # -----------------------------------------------------------------------------
@@ -411,8 +415,8 @@ print('Using this graphics system: {}'.format(
 
 # check if we are in a kivy-ios build
 if platform == 'ios':
-    print('Kivy-IOS project environment detect, use it.')
-    print('Kivy-IOS project located at {0}'.format(kivy_ios_root))
+    print('IOS environment detect, use it.')
+    #print('Kivy-IOS project located at {0}'.format(kivy_ios_root))
     c_options['use_ios'] = True
     c_options['use_sdl3'] = True
 
@@ -484,7 +488,7 @@ can_autodetect_sdl3 = (
 if c_options['use_sdl3'] or can_autodetect_sdl3:
 
     sdl3_valid = False
-    if c_options['use_osx_frameworks'] and platform == 'darwin':
+    if (c_options['use_osx_frameworks'] and platform == 'darwin') or platform == 'ios':
         # check the existence of frameworks
         if KIVY_DEPS_ROOT:
             default_sdl3_frameworks_search_path = join(
@@ -510,7 +514,11 @@ if c_options['use_sdl3'] or can_autodetect_sdl3:
         }
 
         for name in ('SDL3', 'SDL3_ttf', 'SDL3_image', 'SDL3_mixer'):
-            f_path = '{}/{}.framework'.format(sdl3_frameworks_search_path, name)
+            if platform == 'ios':
+                plat_arch = os.environ.get('IOS_PLAT_ARCH', None)
+                f_path = join(sdl3_frameworks_search_path, 'Frameworks', '{}.xcframework'.format(name), plat_arch , '{}.framework'.format(name))
+            else:
+                f_path = '{}/{}.framework'.format(sdl3_frameworks_search_path, name)
             if not exists(f_path):
                 print('Missing framework {}'.format(f_path))
                 sdl3_valid = False
@@ -647,9 +655,12 @@ def determine_angle_flags():
     default_lib_dir = ""
 
     if KIVY_DEPS_ROOT:
-
-        default_include_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "include")
-        default_lib_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "lib")
+        if platform == "ios":
+            default_include_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "include")
+            default_lib_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "lib")
+        else:
+            default_include_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "include")
+            default_lib_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "lib")
 
     kivy_angle_include_dir = environ.get(
         "KIVY_ANGLE_INCLUDE_DIR", default_include_dir
@@ -658,7 +669,7 @@ def determine_angle_flags():
         "KIVY_ANGLE_LIB_DIR", default_lib_dir
     )
 
-    if platform == "darwin":
+    if platform in "darwin":
         flags['libraries'] = ['EGL', 'GLESv2']
         flags['library_dirs'] = [kivy_angle_lib_dir]
         flags['include_dirs'] = [kivy_angle_include_dir]
