@@ -512,7 +512,9 @@ if c_options['use_sdl3'] or can_autodetect_sdl3:
                 '-Xlinker', '-rpath',
                 '-Xlinker', sdl3_frameworks_search_path,
                 '-Xlinker', '-headerpad',
-                '-Xlinker', '666'], # 190
+                '-Xlinker', '190',
+                '-F', join(sdl3_frameworks_search_path, 'SDL3.xcframework', IOS_PLAT_ARCH, 'SDL3.framework'),
+            ], # 190
             'include_dirs': [],
             'extra_compile_args': ['-F{}'.format(sdl3_frameworks_search_path)]
         }
