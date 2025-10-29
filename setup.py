@@ -703,7 +703,12 @@ def determine_gl_flags():
         flags['libraries'] = ['opengl32', 'glew32']
     elif platform == 'ios':
         flags['libraries'] = ['GLESv2']
-        flags['extra_link_args'] = ['-framework', 'OpenGLES', '-framework', 'Foundation']
+        flags['extra_link_args'] = [
+            '-framework', 'OpenGLES', '-framework', 'Foundation', 
+            '-framework', 'libEGL', '-framework', 'libGLESv2',
+            '-F', join("dist", 'Frameworks', 'libEGL.xcframework', IOS_PLAT_ARCH),
+            '-F', join("dist", 'Frameworks', 'libGLESv2.xcframework', IOS_PLAT_ARCH),
+        ]
     elif platform == 'darwin':
         flags['extra_link_args'] = ['-framework', 'OpenGL']
     elif platform.startswith('freebsd'):
