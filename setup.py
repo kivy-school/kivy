@@ -871,7 +871,7 @@ def determine_sdl3():
             '-F', join("dist", 'Frameworks', 'SDL3.xcframework', IOS_PLAT_ARCH),
             #'-F', join("dist", 'Frameworks', 'libGLESv2.xcframework', IOS_PLAT_ARCH),
         ]
-
+    print("determine_sdl3", flags)
     return flags
 
 
