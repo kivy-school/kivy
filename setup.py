@@ -680,6 +680,8 @@ def determine_angle_flags():
             "-Wl,-rpath,{}".format(kivy_angle_lib_dir)
         ]
     elif platform == "ios":
+        flags['libraries'] = ['EGL', 'GLESv2']
+        flags['library_dirs'] = [kivy_angle_lib_dir]
         flags['include_dirs'] = [kivy_angle_include_dir]
     else:
         raise Exception("ANGLE is not supported on this platform")
