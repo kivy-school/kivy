@@ -813,7 +813,12 @@ def determine_sdl3():
                 if isdir(sdl_inc):
                     sdl3_paths.append(sdl_inc)
 
-        sdl3_paths.extend(['/usr/local/include/SDL3', '/usr/include/SDL3'])
+        if platform == 'ios':
+            sdl3_paths.extend([
+                "dist/Frameworks/SDL3Headers",
+            ])
+        else :
+            sdl3_paths.extend(['/usr/local/include/SDL3', '/usr/include/SDL3'])
 
     flags['include_dirs'] = sdl3_paths
     flags['extra_link_args'] = []
