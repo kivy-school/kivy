@@ -512,7 +512,7 @@ if c_options['use_sdl3'] or can_autodetect_sdl3:
                 '-Xlinker', '-rpath',
                 '-Xlinker', sdl3_frameworks_search_path,
                 '-Xlinker', '-headerpad',
-                '-Xlinker', '190'],
+                '-Xlinker', '666'], # 190
             'include_dirs': [],
             'extra_compile_args': ['-F{}'.format(sdl3_frameworks_search_path)]
         }
