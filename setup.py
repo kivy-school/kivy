@@ -763,10 +763,11 @@ def determine_angle_flags():
         ios_frameworks = plat_options['ios']['frameworks']
         egl = ios_frameworks.get('EGL')
         gles = ios_frameworks.get('GLESv2')
+        sdl3 = ios_frameworks.get('SDL3')
         if not egl or not gles:
             raise Exception("ANGLE frameworks not defined for iOS")
         
-        flags['include_dirs'] = [kivy_angle_include_dir]
+        flags['include_dirs'] = [egl['headers'], sdl3['headers']]
         flags['extra_link_args'] = [
             '-framework', 'EGL',
             '-framework', 'GLESv2',
