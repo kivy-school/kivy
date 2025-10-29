@@ -192,6 +192,7 @@ if environ.get('KIVY_CROSS_PLATFORM'):
 # If the user has specified a KIVY_DEPS_ROOT, use that as the root for
 # (ATM only SDL) dependencies. Otherwise, use the default locations.
 KIVY_DEPS_ROOT = os.environ.get('KIVY_DEPS_ROOT', None)
+IOS_PLAT_ARCH = os.environ.get('IOS_PLAT_ARCH', None)
 
 if KIVY_DEPS_ROOT is None and platform == "ios":
     KIVY_DEPS_ROOT = os.getcwd()
@@ -517,9 +518,8 @@ if c_options['use_sdl3'] or can_autodetect_sdl3:
         }
 
         for name in ('SDL3', 'SDL3_ttf', 'SDL3_image', 'SDL3_mixer'):
-            if platform == 'ios':
-                plat_arch = os.environ.get('IOS_PLAT_ARCH', None)
-                f_path = join(sdl3_frameworks_search_path, '{}.xcframework'.format(name), plat_arch , '{}.framework'.format(name))
+            if platform == 'ios' and IOS_PLAT_ARCH:
+                f_path = join(sdl3_frameworks_search_path, '{}.xcframework'.format(name), IOS_PLAT_ARCH , '{}.framework'.format(name))
             else:
                 f_path = '{}/{}.framework'.format(sdl3_frameworks_search_path, name)
             if not exists(f_path):
@@ -658,10 +658,9 @@ def determine_angle_flags():
     default_lib_dir = ""
 
     if KIVY_DEPS_ROOT:
-        if platform == "ios":
-            plat_arch = os.environ.get('IOS_PLAT_ARCH', None)
+        if platform == "ios" and IOS_PLAT_ARCH:
             default_include_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "Frameworks" , "include")
-            default_lib_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "Frameworks" , "libEGL.xcframework" , plat_arch, "libEGL.framework")
+            default_lib_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "Frameworks" , "libEGL.xcframework" , IOS_PLAT_ARCH, "libEGL.framework")
         else:
             default_include_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "include")
             default_lib_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "lib")
@@ -1036,7 +1035,8 @@ if platform in ('darwin', 'ios'):
             '-framework', 'UniformTypeIdentifiers',
             '-framework', 'Metal',
             '-framework', 'libEGL',
-            '-framework', 'libGLESv2'
+            '-framework', 'libGLESv2',
+            '-F', ''
             ]}
     else:
         osx_flags = {'extra_link_args': [
@@ -1065,7 +1065,7 @@ if c_options['use_avfoundation']:
                 '-framework', 'CoreGraphics',
                 '-framework', 'CoreVideo',
                 '-framework', 'Foundation',
-                '-framework', 'AVFoundation',
+                '-framework', 'CoreMedia',
             ],
             'extra_compile_args': ['-ObjC++']
         }
