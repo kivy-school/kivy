@@ -193,6 +193,9 @@ if environ.get('KIVY_CROSS_PLATFORM'):
 # (ATM only SDL) dependencies. Otherwise, use the default locations.
 KIVY_DEPS_ROOT = os.environ.get('KIVY_DEPS_ROOT', None)
 
+if KIVY_DEPS_ROOT is None and platform == "ios":
+    KIVY_DEPS_ROOT = os.getcwd()
+
 # if KIVY_DEPS_ROOT is None and platform is linux or darwin show a warning
 # message, because using a system provided SDL3 is not recommended.
 # (will be shown only in verbose mode)
@@ -656,8 +659,9 @@ def determine_angle_flags():
 
     if KIVY_DEPS_ROOT:
         if platform == "ios":
-            default_include_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "include")
-            default_lib_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "lib")
+            plat_arch = os.environ.get('IOS_PLAT_ARCH', None)
+            default_include_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "Frameworks" , "include")
+            default_lib_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "Frameworks" , "libEGL.xcframework" , plat_arch, "libEGL.framework")
         else:
             default_include_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "include")
             default_lib_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "lib")
@@ -1020,7 +1024,20 @@ if platform in ('darwin', 'ios'):
             '-framework', 'CoreGraphics',
             '-framework', 'QuartzCore',
             '-framework', 'ImageIO',
-            '-framework', 'Accelerate']}
+            '-framework', 'Accelerate',
+
+            '-framework', 'CoreFoundation',
+            '-framework', 'CoreGraphics',
+            '-framework', 'CoreMedia',
+            '-framework', 'CoreVideo',
+            '-framework', 'ImageIO',
+            '-framework', 'MobileCoreServices',
+            '-framework', 'CoreServices',
+            '-framework', 'UniformTypeIdentifiers',
+            '-framework', 'Metal',
+            '-framework', 'libEGL',
+            '-framework', 'libGLESv2'
+            ]}
     else:
         osx_flags = {'extra_link_args': [
             '-framework', 'ApplicationServices']}
@@ -1032,17 +1049,22 @@ if platform in ('darwin', 'ios'):
         sources['core/window/window_info.pyx'], osx_flags)
 
 if c_options['use_avfoundation']:
-    import platform as _platform
-    mac_ver = [int(x) for x in _platform.mac_ver()[0].split('.')[:2]]
-    if mac_ver >= [10, 7] or platform == 'ios':
+
+    mac_ver_ok = True # ios app we need xcode >=16.0 for app store support which requires macos >=14.5
+    if platform == 'darwin':
+        import platform as _platform
+        mac_ver = [int(x) for x in _platform.mac_ver()[0].split('.')[:2]]
+        mac_ver_ok = mac_ver >= [10, 7]
+    
+    if not mac_ver_ok:
+        print('AVFoundation cannot be used, OSX >= 10.7 is required')
+    else:
         osx_flags = {
             'extra_link_args': ['-framework', 'AVFoundation'],
             'extra_compile_args': ['-ObjC++']
         }
         sources['core/camera/camera_avfoundation.pyx'] = merge(
             base_flags, osx_flags)
-    else:
-        print('AVFoundation cannot be used, OSX >= 10.7 is required')
 
 if c_options["use_angle_gl_backend"]:
 
