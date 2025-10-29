@@ -530,6 +530,7 @@ if c_options['use_sdl3'] or can_autodetect_sdl3:
 
             if platform == 'ios' and IOS_PLAT_ARCH:
                 sdl3_flags['extra_link_args'] += ['-F', f_path]
+                sdl3_flags['extra_compile_args'] += ['-F', f_path]
             
             sdl3_flags['include_dirs'] += [join(f_path, 'Headers')]
             print('Found sdl3 frameworks: {}'.format(f_path))
