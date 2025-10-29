@@ -519,7 +519,7 @@ if c_options['use_sdl3'] or can_autodetect_sdl3:
         for name in ('SDL3', 'SDL3_ttf', 'SDL3_image', 'SDL3_mixer'):
             if platform == 'ios':
                 plat_arch = os.environ.get('IOS_PLAT_ARCH', None)
-                f_path = join(sdl3_frameworks_search_path, 'Frameworks', '{}.xcframework'.format(name), plat_arch , '{}.framework'.format(name))
+                f_path = join(sdl3_frameworks_search_path, '{}.xcframework'.format(name), plat_arch , '{}.framework'.format(name))
             else:
                 f_path = '{}/{}.framework'.format(sdl3_frameworks_search_path, name)
             if not exists(f_path):
