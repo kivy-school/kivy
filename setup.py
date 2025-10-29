@@ -1036,7 +1036,8 @@ if platform in ('darwin', 'ios'):
             '-framework', 'Metal',
             '-framework', 'libEGL',
             '-framework', 'libGLESv2',
-            '-F', ''
+            '-F', join("dist", 'Frameworks', 'libEGL.xcframework', IOS_PLAT_ARCH),
+            '-F', join("dist", 'Frameworks', 'libGLESv2.xcframework', IOS_PLAT_ARCH),
             ]}
     else:
         osx_flags = {'extra_link_args': [
@@ -1059,18 +1060,29 @@ if c_options['use_avfoundation']:
     if not mac_ver_ok:
         print('AVFoundation cannot be used, OSX >= 10.7 is required')
     else:
-        osx_flags = {
-            'extra_link_args': [
-                '-framework', 'AVFoundation',
-                '-framework', 'CoreGraphics',
-                '-framework', 'CoreVideo',
-                '-framework', 'Foundation',
-                '-framework', 'CoreMedia',
-            ],
+        extra_link_args = [
+            '-framework', 'AVFoundation',
+            '-framework', 'CoreGraphics',
+            '-framework', 'CoreVideo',
+            '-framework', 'Foundation',
+            '-framework', 'CoreMedia',
+        ]
+
+        if platform == 'ios':
+            extra_link_args += [
+                '-framework', 'UIKit',
+                # '-framework', 'AudioToolbox',
+                # '-framework', 'Metal',
+                # '-F', join("dist", 'Frameworks', 'libEGL.xcframework', IOS_PLAT_ARCH),
+                # '-F', join("dist", 'Frameworks', 'libGLESv2.xcframework', IOS_PLAT_ARCH),
+            ]
+
+        camera_flags = {
+            'extra_link_args': extra_link_args,
             'extra_compile_args': ['-ObjC++']
         }
         sources['core/camera/camera_avfoundation.pyx'] = merge(
-            base_flags, osx_flags)
+            base_flags, camera_flags)
 
 if c_options["use_angle_gl_backend"]:
 
