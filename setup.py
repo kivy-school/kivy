@@ -865,6 +865,12 @@ def determine_sdl3():
     if not can_compile:
         c_options['use_sdl3'] = False
         return {}
+    
+    if platform == 'ios':
+        flags['extra_link_args'] += [
+            '-F', join("dist", 'Frameworks', 'SDL3.xcframework', IOS_PLAT_ARCH),
+            #'-F', join("dist", 'Frameworks', 'libGLESv2.xcframework', IOS_PLAT_ARCH),
+        ]
 
     return flags
 
