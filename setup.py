@@ -683,6 +683,12 @@ def determine_angle_flags():
         flags['libraries'] = ['EGL', 'GLESv2']
         flags['library_dirs'] = [kivy_angle_lib_dir]
         flags['include_dirs'] = [kivy_angle_include_dir]
+        flags['extra_link_args'] = [
+            '-framework', 'OpenGLES', '-framework', 'Foundation', 
+            '-framework', 'libEGL', '-framework', 'libGLESv2',
+            '-F', join("dist", 'Frameworks', 'libEGL.xcframework', IOS_PLAT_ARCH),
+            '-F', join("dist", 'Frameworks', 'libGLESv2.xcframework', IOS_PLAT_ARCH),
+        ]
     else:
         raise Exception("ANGLE is not supported on this platform")
 
