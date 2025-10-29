@@ -1050,6 +1050,7 @@ if platform in ('darwin', 'ios'):
             '-framework', 'libGLESv2',
             '-F', join("dist", 'Frameworks', 'libEGL.xcframework', IOS_PLAT_ARCH),
             '-F', join("dist", 'Frameworks', 'libGLESv2.xcframework', IOS_PLAT_ARCH),
+            '-F', join("dist", 'Frameworks', 'SDL3.xcframework', IOS_PLAT_ARCH),
             ]}
     else:
         osx_flags = {'extra_link_args': [
