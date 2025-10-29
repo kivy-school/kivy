@@ -1156,6 +1156,7 @@ if c_options['use_avfoundation']:
         extra_link_args = [
             '-framework', 'AVFoundation'
         ]
+        include_dirs = []
 
         if platform == 'ios':
             extra_link_args += [
@@ -1165,9 +1166,17 @@ if c_options['use_avfoundation']:
                 '-framework', 'CoreVideo',
                 '-framework', 'CoreGraphics',
                 '-framework', 'QuartzCore',
+                '-framework', 'UniformTypeIdentifiers',
+            ]
+            ios_data = plat_options['ios']
+            ios_frameworks = ios_data['frameworks']
+            egl_headers = ios_frameworks['EGL']['headers']
+            include_dirs += [
+                egl_headers
             ]
 
         avf_flags = {
+            'include_dirs': include_dirs,
             'extra_link_args': extra_link_args,
             'extra_compile_args': ['-ObjC++']
         }
