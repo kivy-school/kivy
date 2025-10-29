@@ -1060,7 +1060,13 @@ if c_options['use_avfoundation']:
         print('AVFoundation cannot be used, OSX >= 10.7 is required')
     else:
         osx_flags = {
-            'extra_link_args': ['-framework', 'AVFoundation'],
+            'extra_link_args': [
+                '-framework', 'AVFoundation',
+                '-framework', 'CoreGraphics',
+                '-framework', 'CoreVideo',
+                '-framework', 'Foundation',
+                '-framework', 'AVFoundation',
+            ],
             'extra_compile_args': ['-ObjC++']
         }
         sources['core/camera/camera_avfoundation.pyx'] = merge(
