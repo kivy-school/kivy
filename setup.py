@@ -1171,7 +1171,9 @@ if c_options['use_avfoundation']:
             extra_link_args += [
                 '-framework', 'Foundation',
                 '-framework', 'UIKit',
-                '-framework', 'CoreGraphics'
+                '-framework', 'CoreGraphics',
+                '-framework', 'CoreMedia',
+                '-framework', 'CoreVideo'
             ]
             ios_data = plat_options['ios']
             ios_frameworks = ios_data['frameworks']
