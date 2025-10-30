@@ -773,7 +773,7 @@ def determine_angle_flags():
         
         flags['include_dirs'] = [egl['headers'], sdl3['headers']]
         flags['extra_link_args'] = [
-            '-framework', 'EGL',
+            '-framework', 'libEGL',
             '-framework', 'GLESv2',
             '-F', dirname(egl['path']),
             '-F', dirname(gles['path']),
@@ -810,7 +810,7 @@ def determine_gl_flags():
 
         flags['extra_link_args'] = [
             '-framework', 'GLESv2',
-            '-framework', 'EGL',
+            '-framework', 'libEGL',
             '-F', dirname(egl['path']),
             '-F', dirname(gles['path']),
         ]
