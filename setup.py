@@ -210,8 +210,10 @@ plat_options = OrderedDict()
 
 if platform == 'ios':
 
-    plat_arch = os.environ.get('IOS_PLAT_ARCH', None)
-
+    from platform import ios_ver
+    ios_info = ios_ver()
+    plat_arch = "ios-arm64_x86_64-simulator" if ios_info.is_simulator else "ios-arm64"
+    
     ios_data = OrderedDict()
     root = os.getcwd()
 
