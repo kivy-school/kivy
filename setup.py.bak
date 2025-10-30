@@ -159,12 +159,9 @@ platform = sys.platform
 ndkplatform = environ.get('NDKPLATFORM')
 if ndkplatform is not None and environ.get('LIBLINK'):
     platform = 'android'
-
-# should not be needed anymore, as cibuildwheel will set sys.platform to 'ios'
-# kivy_ios_root = environ.get('KIVYIOSROOT', None)
-# if kivy_ios_root is not None:
-#     platform = 'ios'
-
+kivy_ios_root = environ.get('KIVYIOSROOT', None)
+if kivy_ios_root is not None:
+    platform = 'ios'
 # proprietary broadcom video core drivers
 if exists('/opt/vc/include/bcm_host.h'):
     used_pi_version = pi_version
@@ -192,10 +189,6 @@ if environ.get('KIVY_CROSS_PLATFORM'):
 # If the user has specified a KIVY_DEPS_ROOT, use that as the root for
 # (ATM only SDL) dependencies. Otherwise, use the default locations.
 KIVY_DEPS_ROOT = os.environ.get('KIVY_DEPS_ROOT', None)
-IOS_PLAT_ARCH = os.environ.get('IOS_PLAT_ARCH', None)
-
-if KIVY_DEPS_ROOT is None and platform == "ios":
-    KIVY_DEPS_ROOT = os.getcwd()
 
 # if KIVY_DEPS_ROOT is None and platform is linux or darwin show a warning
 # message, because using a system provided SDL3 is not recommended.
@@ -253,11 +246,10 @@ use_embed_signature = use_embed_signature or bool(
 # This determines whether Cython specific functionality may be used.
 can_use_cython = True
 
-# cythonize on mobile platforms by cibuildwheel works now, so allow it.
-# if platform in ('ios', 'android'):
-#     # NEVER use or declare cython on these platforms
-#     print('Not using cython on %s' % platform)
-#     can_use_cython = False
+if platform in ('ios', 'android'):
+    # NEVER use or declare cython on these platforms
+    print('Not using cython on %s' % platform)
+    can_use_cython = False
 
 
 # -----------------------------------------------------------------------------
@@ -419,8 +411,8 @@ print('Using this graphics system: {}'.format(
 
 # check if we are in a kivy-ios build
 if platform == 'ios':
-    print('IOS environment detect, use it.')
-    #print('Kivy-IOS project located at {0}'.format(kivy_ios_root))
+    print('Kivy-IOS project environment detect, use it.')
+    print('Kivy-IOS project located at {0}'.format(kivy_ios_root))
     c_options['use_ios'] = True
     c_options['use_sdl3'] = True
 
@@ -492,7 +484,7 @@ can_autodetect_sdl3 = (
 if c_options['use_sdl3'] or can_autodetect_sdl3:
 
     sdl3_valid = False
-    if (c_options['use_osx_frameworks'] and platform == 'darwin') or platform == 'ios':
+    if c_options['use_osx_frameworks'] and platform == 'darwin':
         # check the existence of frameworks
         if KIVY_DEPS_ROOT:
             default_sdl3_frameworks_search_path = join(
@@ -512,28 +504,18 @@ if c_options['use_sdl3'] or can_autodetect_sdl3:
                 '-Xlinker', '-rpath',
                 '-Xlinker', sdl3_frameworks_search_path,
                 '-Xlinker', '-headerpad',
-                '-Xlinker', '190',
-                '-F', join(sdl3_frameworks_search_path, 'SDL3.xcframework', IOS_PLAT_ARCH, 'SDL3.framework'),
-            ], # 190
+                '-Xlinker', '190'],
             'include_dirs': [],
             'extra_compile_args': ['-F{}'.format(sdl3_frameworks_search_path)]
         }
 
         for name in ('SDL3', 'SDL3_ttf', 'SDL3_image', 'SDL3_mixer'):
-            if platform == 'ios' and IOS_PLAT_ARCH:
-                f_path = join(sdl3_frameworks_search_path, '{}.xcframework'.format(name), IOS_PLAT_ARCH , '{}.framework'.format(name))
-            else:
-                f_path = '{}/{}.framework'.format(sdl3_frameworks_search_path, name)
+            f_path = '{}/{}.framework'.format(sdl3_frameworks_search_path, name)
             if not exists(f_path):
                 print('Missing framework {}'.format(f_path))
                 sdl3_valid = False
                 continue
             sdl3_flags['extra_link_args'] += ['-framework', name]
-
-            if platform == 'ios' and IOS_PLAT_ARCH:
-                sdl3_flags['extra_link_args'] += ['-F', f_path]
-                sdl3_flags['extra_compile_args'] += ['-F', f_path]
-            
             sdl3_flags['include_dirs'] += [join(f_path, 'Headers')]
             print('Found sdl3 frameworks: {}'.format(f_path))
 
@@ -665,12 +647,9 @@ def determine_angle_flags():
     default_lib_dir = ""
 
     if KIVY_DEPS_ROOT:
-        if platform == "ios" and IOS_PLAT_ARCH:
-            default_include_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "Frameworks" , "include")
-            default_lib_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "Frameworks" , "libEGL.xcframework" , IOS_PLAT_ARCH, "libEGL.framework")
-        else:
-            default_include_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "include")
-            default_lib_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "lib")
+
+        default_include_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "include")
+        default_lib_dir = os.path.join(KIVY_DEPS_ROOT, "dist", "lib")
 
     kivy_angle_include_dir = environ.get(
         "KIVY_ANGLE_INCLUDE_DIR", default_include_dir
@@ -687,15 +666,7 @@ def determine_angle_flags():
             "-Wl,-rpath,{}".format(kivy_angle_lib_dir)
         ]
     elif platform == "ios":
-        #flags['libraries'] = ['EGL', 'GLESv2']
-        #flags['library_dirs'] = [kivy_angle_lib_dir]
         flags['include_dirs'] = [kivy_angle_include_dir]
-        flags['extra_link_args'] = [
-            '-framework', 'OpenGLES', '-framework', 'Foundation', 
-            '-framework', 'libEGL', '-framework', 'libGLESv2',
-            '-F', join("dist", 'Frameworks', 'libEGL.xcframework', IOS_PLAT_ARCH),
-            '-F', join("dist", 'Frameworks', 'libGLESv2.xcframework', IOS_PLAT_ARCH),
-        ]
     else:
         raise Exception("ANGLE is not supported on this platform")
 
@@ -718,12 +689,7 @@ def determine_gl_flags():
         flags['libraries'] = ['opengl32', 'glew32']
     elif platform == 'ios':
         flags['libraries'] = ['GLESv2']
-        flags['extra_link_args'] = [
-            '-framework', 'OpenGLES', '-framework', 'Foundation', 
-            '-framework', 'libEGL', '-framework', 'libGLESv2',
-            '-F', join("dist", 'Frameworks', 'libEGL.xcframework', IOS_PLAT_ARCH),
-            '-F', join("dist", 'Frameworks', 'libGLESv2.xcframework', IOS_PLAT_ARCH),
-        ]
+        flags['extra_link_args'] = ['-framework', 'OpenGLES']
     elif platform == 'darwin':
         flags['extra_link_args'] = ['-framework', 'OpenGL']
     elif platform.startswith('freebsd'):
@@ -826,12 +792,7 @@ def determine_sdl3():
                 if isdir(sdl_inc):
                     sdl3_paths.append(sdl_inc)
 
-        if platform == 'ios':
-            sdl3_paths.extend([
-                "dist/Frameworks/SDL3Headers",
-            ])
-        else :
-            sdl3_paths.extend(['/usr/local/include/SDL3', '/usr/include/SDL3'])
+        sdl3_paths.extend(['/usr/local/include/SDL3', '/usr/include/SDL3'])
 
     flags['include_dirs'] = sdl3_paths
     flags['extra_link_args'] = []
@@ -872,13 +833,7 @@ def determine_sdl3():
     if not can_compile:
         c_options['use_sdl3'] = False
         return {}
-    
-    if platform == 'ios':
-        flags['extra_link_args'] += [
-            '-F', join("dist", 'Frameworks', 'SDL3.xcframework', IOS_PLAT_ARCH),
-            #'-F', join("dist", 'Frameworks', 'libGLESv2.xcframework', IOS_PLAT_ARCH),
-        ]
-    print("determine_sdl3", flags)
+
     return flags
 
 
@@ -1054,23 +1009,7 @@ if platform in ('darwin', 'ios'):
             '-framework', 'CoreGraphics',
             '-framework', 'QuartzCore',
             '-framework', 'ImageIO',
-            '-framework', 'Accelerate',
-
-            '-framework', 'CoreFoundation',
-            '-framework', 'CoreGraphics',
-            '-framework', 'CoreMedia',
-            '-framework', 'CoreVideo',
-            '-framework', 'ImageIO',
-            '-framework', 'MobileCoreServices',
-            '-framework', 'CoreServices',
-            '-framework', 'UniformTypeIdentifiers',
-            '-framework', 'Metal',
-            '-framework', 'libEGL',
-            '-framework', 'libGLESv2',
-            '-F', join("dist", 'Frameworks', 'libEGL.xcframework', IOS_PLAT_ARCH),
-            '-F', join("dist", 'Frameworks', 'libGLESv2.xcframework', IOS_PLAT_ARCH),
-            '-F', join("dist", 'Frameworks', 'SDL3.xcframework', IOS_PLAT_ARCH),
-            ]}
+            '-framework', 'Accelerate']}
     else:
         osx_flags = {'extra_link_args': [
             '-framework', 'ApplicationServices']}
@@ -1082,39 +1021,17 @@ if platform in ('darwin', 'ios'):
         sources['core/window/window_info.pyx'], osx_flags)
 
 if c_options['use_avfoundation']:
-
-    mac_ver_ok = True # ios app we need xcode >=16.0 for app store support which requires macos >=14.5
-    if platform == 'darwin':
-        import platform as _platform
-        mac_ver = [int(x) for x in _platform.mac_ver()[0].split('.')[:2]]
-        mac_ver_ok = mac_ver >= [10, 7]
-    
-    if not mac_ver_ok:
-        print('AVFoundation cannot be used, OSX >= 10.7 is required')
-    else:
-        extra_link_args = [
-            '-framework', 'AVFoundation',
-            '-framework', 'CoreGraphics',
-            '-framework', 'CoreVideo',
-            '-framework', 'Foundation',
-            '-framework', 'CoreMedia',
-        ]
-
-        if platform == 'ios':
-            extra_link_args += [
-                '-framework', 'UIKit',
-                # '-framework', 'AudioToolbox',
-                # '-framework', 'Metal',
-                # '-F', join("dist", 'Frameworks', 'libEGL.xcframework', IOS_PLAT_ARCH),
-                # '-F', join("dist", 'Frameworks', 'libGLESv2.xcframework', IOS_PLAT_ARCH),
-            ]
-
-        camera_flags = {
-            'extra_link_args': extra_link_args,
+    import platform as _platform
+    mac_ver = [int(x) for x in _platform.mac_ver()[0].split('.')[:2]]
+    if mac_ver >= [10, 7] or platform == 'ios':
+        osx_flags = {
+            'extra_link_args': ['-framework', 'AVFoundation'],
             'extra_compile_args': ['-ObjC++']
         }
         sources['core/camera/camera_avfoundation.pyx'] = merge(
-            base_flags, camera_flags)
+            base_flags, osx_flags)
+    else:
+        print('AVFoundation cannot be used, OSX >= 10.7 is required')
 
 if c_options["use_angle_gl_backend"]:
 
