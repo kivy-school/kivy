@@ -703,7 +703,10 @@ def determine_base_flags():
             raise Exception('IOSSDKROOT is not set')
         flags['include_dirs'] += [sysroot]
         flags['extra_compile_args'] += ['-isysroot', sysroot]
-        flags['extra_link_args'] += ['-isysroot', sysroot, '-framework', 'Foundation', "-framework", "CoreFoundation"]
+        flags['extra_link_args'] += [
+            '-isysroot', sysroot, 
+            #'-framework', 'Foundation'
+        ]
     elif platform.startswith('freebsd'):
         flags['include_dirs'] += [join(
             environ.get('LOCALBASE', '/usr/local'), 'include')]
@@ -1130,15 +1133,15 @@ if c_options['use_pangoft2'] in (None, True) and platform not in (
 if platform in ('darwin', 'ios'):
     # activate ImageIO provider for our core image
     if platform == 'ios':
+
         osx_flags = {'extra_link_args': [
             '-framework', 'Foundation',
-            '-framework', 'UIKit',
-            '-framework', 'AudioToolbox',
+            '-framework', 'CoreFoundation',
             '-framework', 'CoreGraphics',
-            '-framework', 'QuartzCore',
             '-framework', 'ImageIO',
             '-framework', 'Accelerate',
-            '-framework', 'UniformTypeIdentifiers'
+            '-framework', 'UniformTypeIdentifiers',
+            '-framework', 'CoreServices'
         ]}
     else:
         osx_flags = {'extra_link_args': [
@@ -1169,11 +1172,6 @@ if c_options['use_avfoundation']:
             extra_link_args += [
                 '-framework', 'Foundation',
                 '-framework', 'UIKit',
-                '-framework', 'CoreMedia',
-                '-framework', 'CoreVideo',
-                '-framework', 'CoreGraphics',
-                '-framework', 'QuartzCore',
-                '-framework', 'UniformTypeIdentifiers',
             ]
             ios_data = plat_options['ios']
             ios_frameworks = ios_data['frameworks']
