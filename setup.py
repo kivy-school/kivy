@@ -616,6 +616,10 @@ if c_options['use_sdl3'] or can_autodetect_sdl3:
         default_sdl3_frameworks_search_path = join(
                 root, "dist", "Frameworks"
             )
+        sdl3_flags = {
+            'extra_link_args': [],
+            'include_dirs': [],
+        }
         for name in ('SDL3', 'SDL3_ttf', 'SDL3_image', 'SDL3_mixer'):
             fw_info = ios_frameworks[name]
             f_path = fw_info['path']
@@ -623,8 +627,8 @@ if c_options['use_sdl3'] or can_autodetect_sdl3:
                 print('Missing framework {}'.format(f_path))
                 sdl3_valid = False
                 continue
-            sdl3_flags['extra_link_args'] = ['-framework', name, '-F', dirname(f_path)]
-            sdl3_flags['include_dirs'] = [join(f_path, 'Headers')]
+            sdl3_flags['extra_link_args'] += ['-framework', name, '-F', dirname(f_path)]
+            sdl3_flags['include_dirs'] += [join(f_path, 'Headers')]
             print('Found sdl3 frameworks: {}'.format(f_path))
 
         sdl3_source = 'ios-frameworks'
