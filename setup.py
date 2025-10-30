@@ -703,10 +703,7 @@ def determine_base_flags():
             raise Exception('IOSSDKROOT is not set')
         flags['include_dirs'] += [sysroot]
         flags['extra_compile_args'] += ['-isysroot', sysroot]
-        flags['extra_link_args'] += [
-            '-isysroot', sysroot, 
-            #'-framework', 'Foundation'
-        ]
+        flags['extra_link_args'] += ['-isysroot', sysroot]
     elif platform.startswith('freebsd'):
         flags['include_dirs'] += [join(
             environ.get('LOCALBASE', '/usr/local'), 'include')]
