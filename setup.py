@@ -1137,7 +1137,9 @@ if platform in ('darwin', 'ios'):
             '-framework', 'CoreGraphics',
             '-framework', 'QuartzCore',
             '-framework', 'ImageIO',
-            '-framework', 'Accelerate']}
+            '-framework', 'Accelerate',
+            '-framework', 'UniformTypeIdentifiers'
+        ]}
     else:
         osx_flags = {'extra_link_args': [
             '-framework', 'ApplicationServices']}
