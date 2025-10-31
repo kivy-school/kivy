@@ -3,27 +3,29 @@
 # https://kivy.org/
 #
 
+from kivy.tools.packaging.factory import FactoryBuild
+from kivy.tools.packaging.cython_cfg import get_cython_versions, get_cython_msg
+import kivy
+from setuptools.command.build_ext import build_ext
+from setuptools import Distribution, Extension, find_packages, setup
+import tempfile
+import textwrap
+import sysconfig
+import logging
+from pathlib import Path
+from time import sleep
+from collections import OrderedDict
+from os import walk, environ, makedirs
+from os.path import join, dirname, exists, basename, isdir
+import os
+from copy import deepcopy
+from kivy.utils import pi_version
 import sys
 build_examples = False
 if "--build_examples" in sys.argv:
     build_examples = True
     sys.argv.remove("--build_examples")
 
-from kivy.utils import pi_version
-from copy import deepcopy
-import os
-from os.path import join, dirname, exists, basename, isdir
-from os import walk, environ, makedirs
-from collections import OrderedDict
-from time import sleep
-from pathlib import Path
-import logging
-import sysconfig
-import textwrap
-import tempfile
-
-from setuptools import Distribution, Extension, find_packages, setup
-from setuptools.command.build_ext import build_ext
 
 if sys.version_info[0] == 2:
     logging.critical(
@@ -161,7 +163,7 @@ if ndkplatform is not None and environ.get('LIBLINK'):
     platform = 'android'
 
 # no kivy-ios build since cibuildwheel supports ios builds now
-#kivy_ios_root = environ.get('KIVYIOSROOT', None)
+# kivy_ios_root = environ.get('KIVYIOSROOT', None)
 
 # cibuildwheel will set platform as 'ios' during build
 # if kivy_ios_root is not None:
@@ -213,7 +215,7 @@ if platform == 'ios':
     from platform import ios_ver
     ios_info = ios_ver()
     plat_arch = "ios-arm64_x86_64-simulator" if ios_info.is_simulator else "ios-arm64"
-    
+
     ios_data = OrderedDict()
     root = os.getcwd()
 
@@ -239,7 +241,7 @@ if platform == 'ios':
     gles_fw = join(gles_xc, plat_arch, 'libGLESv2.framework')
 
     egl_headers = join(root, 'dist', 'Frameworks', 'include')
-    
+
     ios_data['frameworks'] = {
         'SDL3': {
             'path': sdl3_fw,
@@ -271,7 +273,7 @@ if platform == 'ios':
             'headers': "",
             'xc': gles_xc,
         }
-    } 
+    }
 
     ios_data['platform_arch'] = plat_arch
 
@@ -428,11 +430,9 @@ class KivyBuildExt(build_ext, object):
 print("Python path is:\n{}\n".format('\n'.join(sys.path)))
 # extract version (simulate doc generation, kivy will be not imported)
 environ['KIVY_DOC_INCLUDE'] = '1'
-import kivy
 
 # Cython check
 # on python-for-android and kivy-ios, cython usage is external
-from kivy.tools.packaging.cython_cfg import get_cython_versions, get_cython_msg
 CYTHON_REQUIRES_STRING, MIN_CYTHON_STRING, MAX_CYTHON_STRING, \
     CYTHON_UNSUPPORTED = get_cython_versions()
 cython_min_msg, cython_max_msg, cython_unsupported_msg = get_cython_msg()
@@ -458,7 +458,6 @@ if can_use_cython:
 # see tools.packaging.{platform}.build.py for custom build commands for
 # portable packages. Also e.g. we use build_ext command from cython if its
 # installed for c extensions.
-from kivy.tools.packaging.factory import FactoryBuild
 cmdclass = {
     'build_factory': FactoryBuild,
     'build_ext': KivyBuildExt}
@@ -487,7 +486,7 @@ print('Using this graphics system: {}'.format(
 # check if we are in a kivy-ios build
 if platform == 'ios':
     print('IOS project environment detect, use it.')
-    #print('Kivy-IOS project located at {0}'.format(kivy_ios_root))
+    # print('Kivy-IOS project located at {0}'.format(kivy_ios_root))
     c_options['use_ios'] = True
     c_options['use_sdl3'] = True
 
@@ -585,7 +584,8 @@ if c_options['use_sdl3'] or can_autodetect_sdl3:
         }
 
         for name in ('SDL3', 'SDL3_ttf', 'SDL3_image', 'SDL3_mixer'):
-            f_path = '{}/{}.framework'.format(sdl3_frameworks_search_path, name)
+            f_path = '{}/{}.framework'.format(
+                sdl3_frameworks_search_path, name)
             if not exists(f_path):
                 print('Missing framework {}'.format(f_path))
                 sdl3_valid = False
@@ -616,8 +616,8 @@ if c_options['use_sdl3'] or can_autodetect_sdl3:
         ios_frameworks = ios_data['frameworks']
 
         default_sdl3_frameworks_search_path = join(
-                root, "dist", "Frameworks"
-            )
+            root, "dist", "Frameworks"
+        )
         sdl3_flags = {
             'extra_link_args': [],
             'include_dirs': [],
@@ -629,12 +629,13 @@ if c_options['use_sdl3'] or can_autodetect_sdl3:
                 print('Missing framework {}'.format(f_path))
                 sdl3_valid = False
                 continue
-            sdl3_flags['extra_link_args'] += ['-framework', name, '-F', dirname(f_path)]
+            sdl3_flags['extra_link_args'] += ['-framework',
+                                              name, '-F', dirname(f_path)]
             sdl3_flags['include_dirs'] += [join(f_path, 'Headers')]
             print('Found sdl3 frameworks: {}'.format(f_path))
 
         sdl3_source = 'ios-frameworks'
-        
+
 
 can_autodetect_wayland = (
     platform == "linux" and c_options["use_wayland"] is None
@@ -660,6 +661,7 @@ if c_options["use_wayland"] or can_autodetect_wayland:
 
 # -----------------------------------------------------------------------------
 # declare flags
+
 
 def expand(root, *args):
     return join(root, 'kivy', *args)
@@ -772,7 +774,7 @@ def determine_angle_flags():
         sdl3 = ios_frameworks.get('SDL3')
         if not egl or not gles:
             raise Exception("ANGLE frameworks not defined for iOS")
-        
+
         flags['include_dirs'] = [egl['headers'], sdl3['headers']]
         flags['extra_link_args'] = [
             '-framework', 'Foundation',
@@ -809,8 +811,8 @@ def determine_gl_flags():
         gles = ios_frameworks.get('GLESv2')
         if not egl or not gles:
             raise Exception("EGL and GLESv2 frameworks not defined for iOS")
-        
-        #flags['libraries'] = ['GLESv2']
+
+        # flags['libraries'] = ['GLESv2']
 
         flags['extra_link_args'] = [
             '-framework', 'libGLESv2',
@@ -885,7 +887,7 @@ def determine_sdl3():
     # TODO: Move framework configuration here.
     if sdl3_source == "macos-frameworks":
         return sdl3_flags
-    
+
     if platform == "ios":
         return sdl3_flags
 
@@ -1119,7 +1121,7 @@ if c_options['use_sdl3'] and sdl3_flags:
     )
 
 if c_options['use_pangoft2'] in (None, True) and platform not in (
-                                      'android', 'ios', 'win32'):
+        'android', 'ios', 'win32'):
     pango_flags = pkgconfig('pangoft2')
     if pango_flags and 'libraries' in pango_flags:
         print('Pango: pangoft2 found via pkg-config')
@@ -1128,7 +1130,7 @@ if c_options['use_pangoft2'] in (None, True) and platform not in (
             'lib/pango/pangoft2.pxi',
             'lib/pango/pangoft2.h']}
         sources['core/text/_text_pango.pyx'] = merge(
-                base_flags, pango_flags, pango_depends)
+            base_flags, pango_flags, pango_depends)
         print(sources['core/text/_text_pango.pyx'])
 
 if platform in ('darwin', 'ios'):
@@ -1155,12 +1157,13 @@ if platform in ('darwin', 'ios'):
         sources['core/window/window_info.pyx'], osx_flags)
 
 if c_options['use_avfoundation']:
-    mac_ver_ok = True # ios app we need xcode >=16.0 for app store support which requires macos >=14.5
+    # ios app we need xcode >=16.0 for app store support which requires macos >=14.5
+    mac_ver_ok = True
     if platform == 'darwin':
         import platform as _platform
         mac_ver = [int(x) for x in _platform.mac_ver()[0].split('.')[:2]]
         mac_ver_ok = mac_ver >= [10, 7]
-    
+
     if not mac_ver_ok:
         print('AVFoundation cannot be used, OSX >= 10.7 is required')
     else:
@@ -1191,7 +1194,7 @@ if c_options['use_avfoundation']:
         }
         sources['core/camera/camera_avfoundation.pyx'] = merge(
             base_flags, avf_flags)
-    
+
 
 if c_options["use_angle_gl_backend"]:
 
