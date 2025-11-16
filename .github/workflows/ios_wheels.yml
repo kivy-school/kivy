@@ -19,13 +19,28 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - name: Build iOS Wheel
-        uses: kivy-school/actions/kivy-ios-wheel@main
+      - name: SDK Root
+        id: sdk_root
+        shell: bash
+        run: |
+            if [[ "${{ matrix.arch }}" == "arm64_iphoneos" ]]; then
+                echo "sdk_root=$(xcrun --show-sdk-path --sdk iphoneos)" >> $GITHUB_OUTPUT
+            else
+                echo "sdk_root=$(xcrun --show-sdk-path --sdk iphonesimulator)" >> $GITHUB_OUTPUT
+            fi
+
+      - name: chmod +x .ci/ios_frameworks.sh
+        shell: bash
+        run: chmod +x .ci/ios_frameworks.sh
+
+      - name: Build wheel for ${{ matrix.arch }}
+        uses: pypa/cibuildwheel@v3.2.1
         with:
-          arch: ${{ matrix.arch }}
-          repository: 'kivy'
-          owner: 'kivy-school'
-          branch: 'mobile_wheels'
-          package-dir: 'kivy'
-          output-dir: 'wheelhouse'
-          kivy-split-examples: '1'
+            #package-dir: ${{ inputs.package-dir }}
+            output-dir: wheelhouse
+        env:
+            CIBW_PLATFORM: ios
+            CIBW_ARCHS: ${{ matrix.arch }}
+            KIVY_SPLIT_EXAMPLES: 1
+            IOSSDKROOT: ${{ steps.sdk_root.outputs.sdk_root }}
+    
