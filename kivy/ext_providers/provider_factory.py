@@ -106,8 +106,13 @@ class ProviderFactory:
 
     @staticmethod
     def cloud_storage_provider():
+        provider = ProviderFactory.providers[ProviderKey.CLOUD_STORAGE]
+        if provider:
+            return provider
         from .cloud_storage import CloudStorageProvider
-        return CloudStorageProvider
+        provider = CloudStorageProvider()
+        ProviderFactory.register_cloud_storage_provider(provider)
+        return provider
     
     @staticmethod
     def register_cloud_storage_provider(provider):
