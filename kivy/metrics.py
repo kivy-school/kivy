@@ -106,6 +106,7 @@ from kivy.context import register_context
 from kivy._metrics import dpi2px, NUMERIC_FORMATS, dispatch_pixel_scale, \
     sync_pixel_scale
 
+from kivy.ext_providers.provider_factory import ProviderFactory, ProviderKey
 
 __all__ = (
     'Metrics', 'MetricsBase', 'pt', 'inch', 'cm', 'mm', 'dp', 'sp', 'dpi2px',
@@ -188,23 +189,26 @@ class MetricsBase(EventDispatcher):
     def get_dpi(self, force_recompute=False):
         if not force_recompute and self._dpi is not None:
             return self._dpi
-
-        if platform == 'android':
-            if USE_SDL3:
-                import jnius
-                Hardware = jnius.autoclass('org.renpy.android.Hardware')
-                value = Hardware.getDPI()
-            else:
-                import android
-                value = android.get_dpi()
-        elif platform == 'ios':
-            import ios
-            value = ios.get_dpi()
-        else:
-            # for all other platforms..
-            from kivy.base import EventLoop
-            EventLoop.ensure_window()
-            value = EventLoop.window.dpi
+        
+        provider = ProviderFactory.metrics_provider()
+        value = provider().get_dpi()
+        
+        # if platform == 'android':
+        #     if USE_SDL3:
+        #         import jnius
+        #         Hardware = jnius.autoclass('org.renpy.android.Hardware')
+        #         value = Hardware.getDPI()
+        #     else:
+        #         import android
+        #         value = android.get_dpi()
+        # elif platform == 'ios':
+        #     import ios
+        #     value = ios.get_dpi()
+        # else:
+        #     # for all other platforms..
+        #     from kivy.base import EventLoop
+        #     EventLoop.ensure_window()
+        #     value = EventLoop.window.dpi
 
         # because dp prop binds to dpi etc. its getter will be executed
         # before dispatch_pixel_scale bound to dpi was called, so we need to
@@ -251,16 +255,19 @@ class MetricsBase(EventDispatcher):
         if not force_recompute and self._density is not None:
             return self._density
 
-        value = 1.0
-        if platform == 'android':
-            import jnius
-            Hardware = jnius.autoclass('org.renpy.android.Hardware')
-            value = Hardware.metrics.scaledDensity
-        elif platform == 'ios':
-            import ios
-            value = ios.get_scale()
-        elif platform in ('macosx', 'win'):
-            value = self.dpi / 96.
+        # value = 1.0
+        # if platform == 'android':
+        #     import jnius
+        #     Hardware = jnius.autoclass('org.renpy.android.Hardware')
+        #     value = Hardware.metrics.scaledDensity
+        # elif platform == 'ios':
+        #     import ios
+        #     value = ios.get_scale()
+        # elif platform in ('macosx', 'win'):
+        #     value = self.dpi / 96.
+
+        provider = ProviderFactory.metrics_provider()
+        value = provider().get_density()
 
         sync_pixel_scale(density=value)
         return value
@@ -286,15 +293,18 @@ class MetricsBase(EventDispatcher):
         if not force_recompute and self._fontscale is not None:
             return self._fontscale
 
-        value = 1.0
-        if platform == 'android':
-            from jnius import autoclass
-            if USE_SDL3:
-                PythonActivity = autoclass('org.kivy.android.PythonActivity')
-            else:
-                PythonActivity = autoclass('org.renpy.android.PythonActivity')
-            config = PythonActivity.mActivity.getResources().getConfiguration()
-            value = config.fontScale
+        # value = 1.0
+        # if platform == 'android':
+        #     from jnius import autoclass
+        #     if USE_SDL3:
+        #         PythonActivity = autoclass('org.kivy.android.PythonActivity')
+        #     else:
+        #         PythonActivity = autoclass('org.renpy.android.PythonActivity')
+        #     config = PythonActivity.mActivity.getResources().getConfiguration()
+        #     value = config.fontScale
+        
+        provider = ProviderFactory.metrics_provider()
+        value = provider().get_fontscale()
 
         sync_pixel_scale(fontscale=value)
         return value
