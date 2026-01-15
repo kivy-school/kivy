@@ -21,6 +21,7 @@ class DefaultMetricsProvider:
             from kivy.base import EventLoop
             EventLoop.ensure_window()
             value = EventLoop.window.dpi
+        return value
 
     def get_density(self) -> float:
         value = 1.0

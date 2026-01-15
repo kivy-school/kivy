@@ -190,8 +190,7 @@ class MetricsBase(EventDispatcher):
         if not force_recompute and self._dpi is not None:
             return self._dpi
         
-        provider = ProviderFactory.metrics_provider()
-        value = provider().get_dpi()
+        value = ProviderFactory.metrics_provider().get_dpi()
         
         # if platform == 'android':
         #     if USE_SDL3:
@@ -266,8 +265,7 @@ class MetricsBase(EventDispatcher):
         # elif platform in ('macosx', 'win'):
         #     value = self.dpi / 96.
 
-        provider = ProviderFactory.metrics_provider()
-        value = provider().get_density()
+        value = ProviderFactory.metrics_provider().get_density()
 
         sync_pixel_scale(density=value)
         return value
@@ -303,8 +301,7 @@ class MetricsBase(EventDispatcher):
         #     config = PythonActivity.mActivity.getResources().getConfiguration()
         #     value = config.fontScale
         
-        provider = ProviderFactory.metrics_provider()
-        value = provider().get_fontscale()
+        value = ProviderFactory.metrics_provider().get_fontscale()
 
         sync_pixel_scale(fontscale=value)
         return value
